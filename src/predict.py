@@ -15,6 +15,7 @@ import pandas as pd
 
 from src.config import SETTINGS
 from src.utils import get_logger
+from src.validation import validate_feature_payload
 
 
 logger = get_logger(__name__)
@@ -69,12 +70,8 @@ def is_model_available(path: str | Path | None = None) -> bool:
 
 
 def _validate_features(payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Ensure all required features are present in the payload."""
-    required = SETTINGS.numeric_features + SETTINGS.categorical_features
-    missing = [f for f in required if f not in payload]
-    if missing:
-        raise ValueError(f"Missing required features: {missing}")
-    return {k: payload[k] for k in required}
+    """Ensure required features are present, typed and in expected ranges."""
+    return validate_feature_payload(payload)
 
 
 def predict_one(payload: Dict[str, Any]) -> Dict[str, Any]:

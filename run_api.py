@@ -6,22 +6,22 @@ Usage::
 
 Equivalent to::
 
-    uvicorn api.fastapi_app:app --host 0.0.0.0 --port 8000 --reload
+    uvicorn api.fastapi_app:app --host 0.0.0.0 --port 8000
 """
 
 from __future__ import annotations
 
-import os
-
 import uvicorn
+
+from src.config import SETTINGS
 
 
 def main() -> None:
-    host = os.getenv("API_HOST", "0.0.0.0")
-    port = int(os.getenv("API_PORT", "8000"))
-    reload_flag = os.getenv("API_RELOAD", "true").lower() in {"1", "true", "yes"}
     uvicorn.run(
-        "api.fastapi_app:app", host=host, port=port, reload=reload_flag
+        "api.fastapi_app:app",
+        host=SETTINGS.api_host,
+        port=SETTINGS.api_port,
+        reload=SETTINGS.api_reload,
     )
 
 

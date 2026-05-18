@@ -21,8 +21,10 @@ This document is intentionally a checklist – fast to read, easy to enforce in 
 - [x] Pydantic validation on every input. Unknown enum values are rejected with 422.
 - [x] Out-of-range numeric inputs (negative tenure, monthly charges > 1000, etc.) are rejected with 422.
 - [x] A global exception handler ensures the API never leaks tracebacks to the client.
+- [x] Security headers are attached to every API response.
+- [x] CORS is disabled by default and can be enabled only with an explicit allow-list.
+- [x] `/predict` supports optional `X-API-Key` validation when `API_KEY` is supplied by the runtime environment.
 - [x] Logging mistakes never crash inference - logging is wrapped in `try/except` so a write failure cannot fail a prediction.
-- [ ] Auth is **not** included in the demo (no risk locally). For production, put the service behind IAP or a signed API gateway and add `Authorization` header validation.
 
 ## Logging hygiene
 
@@ -34,6 +36,7 @@ This document is intentionally a checklist – fast to read, easy to enforce in 
 
 - [x] `requirements.txt` pins lower bounds; CI runs on a clean Python 3.10 and 3.11.
 - [x] No heavy or unused dependencies (e.g. `seaborn` is deliberately not used).
+- [x] CI runs the dependency-free `python scripts/security_audit.py` scanner for common committed-secret patterns.
 - [ ] (Recommended) Run `pip-audit` or Dependabot to receive vulnerability notifications.
 
 ## GitHub safety checklist
@@ -43,12 +46,13 @@ Before `git push`:
 - [ ] `git status` shows no `.env`, no `*.joblib` larger than a few MB, no `data/logs/*.csv`.
 - [ ] `git diff` contains no API keys, no real names, no real customer rows.
 - [ ] All new code has docstrings and type hints.
+- [ ] `python scripts/security_audit.py` reports no obvious secrets.
 - [ ] `pytest -v` passes locally.
 - [ ] CI (`tests.yml`) is green on the PR.
 
 ## Production hardening (out-of-scope for the demo, on the roadmap)
 
-- Add request authentication on `/predict`.
+- For internet-facing deployments, keep `API_KEY` enabled and also place the service behind IAM/IAP or an API gateway.
 - Rate-limit `/predict` at the load balancer.
 - Move logs to BigQuery + a private dataset with column-level access control.
 - Encrypt model artifacts at rest (CMEK on the Cloud Storage bucket).

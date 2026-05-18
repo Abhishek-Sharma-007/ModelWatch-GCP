@@ -16,7 +16,9 @@ WORKDIR /app
 # on python:3.11-slim for x86_64/arm64.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && addgroup --system app \
+    && adduser --system --ingroup app --home /app app
 
 # Install Python dependencies first so the layer caches well.
 COPY requirements.txt ./
@@ -29,8 +31,15 @@ COPY data/raw ./data/raw
 COPY models ./models
 COPY reports ./reports
 
+# Runtime-owned directories for local CSV logging and generated drift reports.
+RUN mkdir -p data/logs data/processed reports \
+    && chown -R app:app /app
+
+USER app
+
 # Cloud Run uses PORT (default 8080); we honor it with an env-driven default.
-ENV PORT=8000
+ENV PORT=8000 \
+    API_RELOAD=false
 EXPOSE 8000
 
 # Run the API. Use ``sh -c`` so the PORT variable is expanded at runtime.

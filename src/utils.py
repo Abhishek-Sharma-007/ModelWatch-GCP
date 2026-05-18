@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 
 
@@ -21,7 +22,8 @@ def get_logger(name: str = "modelwatch") -> logging.Logger:
         handler = logging.StreamHandler()
         handler.setFormatter(logging.Formatter(_LOG_FORMAT))
         logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
+        level_name = os.getenv("LOG_LEVEL", "INFO").upper()
+        logger.setLevel(getattr(logging, level_name, logging.INFO))
         logger.propagate = False
     return logger
 

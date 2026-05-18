@@ -107,6 +107,7 @@ modelwatch-gcp/
 │   ├── logger.py              # CSV prediction logger
 │   └── utils.py               # logging + path helpers
 ├── api/fastapi_app.py         # /, /health, /predict
+├── app.py                     # Streamlit Cloud-friendly dashboard entrypoint
 ├── ui/streamlit_dashboard.py  # 5-page monitoring dashboard
 ├── data/
 │   ├── raw/customer_churn_sample.csv
@@ -117,6 +118,8 @@ modelwatch-gcp/
 ├── tests/                     # pytest suite
 ├── docs/                      # architecture, gcp plan, mlops workflow, etc.
 ├── .github/workflows/tests.yml
+├── .streamlit/config.toml     # Streamlit deployment defaults
+├── scripts/security_audit.py   # dependency-free secret pattern scan
 ├── Dockerfile
 ├── requirements.txt
 ├── run_training.py
@@ -190,7 +193,11 @@ Interactive docs: <http://127.0.0.1:8000/docs>.
 
 ## 12. Streamlit dashboard usage
 
+For Streamlit Community Cloud, select the root-level `app.py` file as the entrypoint. Locally you can run either entrypoint:
+
 ```bash
+streamlit run app.py
+# or
 streamlit run ui/streamlit_dashboard.py
 ```
 
@@ -241,6 +248,8 @@ Health check: `curl http://127.0.0.1:8000/health`.
 ## 17. How to run the dashboard
 
 ```bash
+streamlit run app.py
+# or
 streamlit run ui/streamlit_dashboard.py
 # or
 python run_dashboard.py
@@ -249,6 +258,7 @@ python run_dashboard.py
 ## 18. How to run tests
 
 ```bash
+python scripts/security_audit.py
 pytest -v
 ```
 
@@ -288,7 +298,10 @@ Full plan: [`docs/gcp_deployment_plan.md`](docs/gcp_deployment_plan.md).
 - **This project uses synthetic data only.** Do not commit real customer data.
 - **Do not commit `.env`.** Only `.env.example` is tracked. Real secrets belong in Google Secret Manager.
 - **Do not commit production prediction logs.** `data/logs/*` is gitignored.
-- Pydantic validates all API inputs; the API never echoes the original request body in error messages.
+- Pydantic and shared runtime validation check all API and dashboard prediction inputs; extra API fields are rejected.
+- Browser-facing API responses include conservative security headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, CSP).
+- Optional `API_KEY` protection is available for `/predict`; set it only through a secret manager and send it as `X-API-Key`.
+- CORS is disabled by default; configure `CORS_ALLOW_ORIGINS` as a comma-separated allow-list when a browser client needs it.
 - For real deployments on Cloud Run, mount secrets via **Secret Manager**, not env files.
 - For Vertex AI, prefer **Model Registry + Model Monitoring** over a local joblib + CSV pair.
 
@@ -321,6 +334,7 @@ Before `git push`:
 - [ ] No real customer data in `data/raw/`.
 - [ ] No real prediction logs in `data/logs/`.
 - [ ] `models/churn_model.joblib` either small enough to commit, or excluded via `.gitignore` with regeneration instructions in this README.
+- [ ] `python scripts/security_audit.py` reports no obvious secrets.
 - [ ] `pytest -v` passes locally.
 - [ ] `docker build .` succeeds.
 - [ ] README and `docs/` reflect the current behavior.

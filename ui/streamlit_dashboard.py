@@ -12,7 +12,6 @@ so the dashboard still works without the FastAPI service running.
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
 

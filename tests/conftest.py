@@ -56,6 +56,8 @@ def _isolate_runtime_paths(tmp_path_factory):
         "src.monitoring",
         "src.data_loader",
         "src.preprocessing",
+        "src.validation",
+        "src.security",
     ]:
         if mod_name in sys.modules:
             importlib.reload(sys.modules[mod_name])

@@ -19,6 +19,14 @@ def test_root_endpoint(client):
     assert r.status_code == 200
     body = r.json()
     assert body["project"] == "ModelWatch-GCP"
+    assert body["api_key_required"] is False
+
+
+def test_security_headers_are_present(client):
+    r = client.get("/health")
+    assert r.headers["x-content-type-options"] == "nosniff"
+    assert r.headers["x-frame-options"] == "DENY"
+    assert r.headers["referrer-policy"] == "no-referrer"
 
 
 def test_health_endpoint(client):
@@ -57,5 +65,12 @@ def test_predict_rejects_invalid_payload(client):
 def test_predict_rejects_unknown_enum(client, sample_payload):
     bad = dict(sample_payload)
     bad["contract_type"] = "Lifetime"  # not in Literal options
+    r = client.post("/predict", json=bad)
+    assert r.status_code == 422
+
+
+def test_predict_rejects_extra_fields(client, sample_payload):
+    bad = dict(sample_payload)
+    bad["debug"] = "not allowed"
     r = client.post("/predict", json=bad)
     assert r.status_code == 422
